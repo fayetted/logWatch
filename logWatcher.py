@@ -69,12 +69,15 @@ class LogWatcher(object):
         If async is True make one loop then return.
         """
         while 1:
-            self.update_files()
-            for fid, file in list(self.files_map.iteritems()):
-                self.readfile(file)
-            if async:
-                return
-            time.sleep(interval)
+            try:
+                self.update_files()
+                for fid, file in list(self.files_map.iteritems()):
+                    self.readfile(file)
+                if async:
+                    return
+                time.sleep(interval)
+            except KeyboardInterrupt:
+                break
 
     def log(self, line):
         """Log when a file is un/watched"""
