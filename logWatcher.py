@@ -8,6 +8,7 @@ License: MIT
 """
 
 import os
+import sys
 import time
 import errno
 import stat
@@ -48,8 +49,7 @@ class LogWatcher(object):
         self.callback = callback
         self.folder = os.path.realpath(folder)
         self.extensions = extensions
-        assert os.path.isdir(self.folder), "%s does not exists" \
-                                            % self.folder
+        assert os.path.exists(self.folder), "%s does not exists" % self.folder
         assert callable(callback)
         self.update_files()
         # The first time we run the script we move all file markers at EOF.
@@ -125,18 +125,38 @@ class LogWatcher(object):
 
     def update_files(self):
         ls = []
-        for name in self.listdir():
-            absname = os.path.realpath(os.path.join(self.folder, name))
+        # If self.folder is a directory/folder then add all the files in it to the list.
+        if os.path.isdir(self.folder):
+            for name in self.listdir():
+                absname = os.path.realpath(os.path.join(self.folder, name))
+                try:
+                    st = os.stat(absname)
+                except EnvironmentError, err:
+                    if err.errno != errno.ENOENT:
+                        raise
+                else:
+                    if not stat.S_ISREG(st.st_mode):
+                        continue
+                    fid = self.get_file_id(st)
+                    ls.append((fid, absname))
+        # Allow a single file to be passed instead of a directory/folder
+        elif os.path.isfile(self.folder):
+#             print '{0}: is a file'.format( self.folder )
+            absname = os.path.realpath(self.folder)
             try:
                 st = os.stat(absname)
             except EnvironmentError, err:
                 if err.errno != errno.ENOENT:
                     raise
             else:
-                if not stat.S_ISREG(st.st_mode):
-                    continue
+#                 if not stat.S_ISREG(st.st_mode):
+#                     continue
                 fid = self.get_file_id(st)
                 ls.append((fid, absname))
+#             sys.exit()
+        else:
+            print 'You submitted an object that was neither a file or folder...exiting now.'
+            sys.exit()
 
         # check existent files
         for fid, file in list(self.files_map.iteritems()):
