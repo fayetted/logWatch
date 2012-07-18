@@ -3,7 +3,7 @@
 """
 Real time log files watcher supporting log rotation.
 
-Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
+Original Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
 License: MIT
 """
 
